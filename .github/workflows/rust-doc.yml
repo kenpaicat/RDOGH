@@ -1,0 +1,31 @@
+name: Documentation
+
+on:
+    workflow_run:
+        workflows:
+        - Rust
+        types:
+        - completed
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v3
+        - name: Install lld and clang
+          run: sudo apt-get install lld clang -y --no-install-recommends
+        - uses: actions/cache@v3
+          with:
+            path: |
+                ~/.cargo/bin/
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+            key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+        - name: Deploy docs
+          run: |
+            cargo doc --no-deps
+            rm -rf ./docs
+            echo "<meta http-equiv=\"refresh\" content=\"0; url=RDOGH\">" > target/doc/index.html
+            cp -r target/doc ./docs
